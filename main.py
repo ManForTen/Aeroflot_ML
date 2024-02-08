@@ -8,31 +8,31 @@ warnings.filterwarnings("ignore")
 st.write("""
 # Прогноз количества мест на рейсе
 """)
-mod1, mod2, mod3 = st.tabs(["1 Модель", "2 Модель", "3 Модель"])
+mod1, mod2 = st.tabs(["1 Модель (Bagging Regressor)", "2 Модель (Hist Gradient Boosting Regressor)"])
 # Список названий моделей
 model_names = [
-    'BaggingRegressor_Y',
-    'BaggingRegressor_P',
-    'BaggingRegressor_E',
-    'BaggingRegressor_B',
-    'BaggingRegressor_K',
-    'BaggingRegressor_L',
-    'BaggingRegressor_V',
-    'BaggingRegressor_Q',
-    'BaggingRegressor_X',
-    'BaggingRegressor_M',
-    'BaggingRegressor_J',
-    'BaggingRegressor_C',
-    'BaggingRegressor_D',
-    'BaggingRegressor_O',
-    'BaggingRegressor_H',
-    'BaggingRegressor_Z',
-    'BaggingRegressor_T',
-    'BaggingRegressor_I',
-    'BaggingRegressor_N',
-    'BaggingRegressor_G',
-    'BaggingRegressor_R',
-    'BaggingRegressor_U'
+    'Y',
+    'P',
+    'E',
+    'B',
+    'K',
+    'L',
+    'V',
+    'Q',
+    'X',
+    'M',
+    'J',
+    'C',
+    'D',
+    'O',
+    'H',
+    'Z',
+    'T',
+    'I',
+    'N',
+    'G',
+    'R',
+    'U'
 ]
 
 predictions_dict = {}  # Словарь для хранения предсказаний для каждой модели
@@ -73,43 +73,61 @@ def transform_date(date):
     }
 
 
+input_date = st.date_input("Выберите дату:", datetime.datetime(2019, 12, 31))
+transformed_data = transform_date(input_date)
+
+flt_time = st.time_input('Выберите время', value=datetime.time(13, 35))
+
+new_data = pd.DataFrame({
+    'SA': [0.0],  # По умолчанию
+    'AU': [4.0],  # По умолчанию
+    'DTD': [st.number_input('Введите количество дней до вылета рейса:', min_value=0)],  # Ввод пользователя
+    'FLTNUM': [st.number_input('Введите № рейса:', min_value=0)],  # Ввод пользователя
+    'fltHour': [flt_time.hour],  # Ввод пользователя
+    'fltMinute': [flt_time.minute]  # Ввод пользователя
+})
+
+combined_data = {**new_data.iloc[0].to_dict(), **transformed_data}
+
 with mod1:
-    input_date = st.date_input("Выберите дату:", datetime.datetime(2019, 12, 31))
-    transformed_data = transform_date(input_date)
-
-    flt_time = st.time_input('Выберите время', value=datetime.time(13, 35))
-
-    new_data = pd.DataFrame({
-        'SA': [0.0],  # По умолчанию
-        'AU': [4.0],  # По умолчанию
-        'NS': [0.0],  # По умолчанию
-        'DTD': [st.number_input('Введите количество дней до вылета рейса:', min_value=0)],  # Ввод пользователя
-        'FLTNUM': [st.number_input('Введите № рейса:', min_value=0)],  # Ввод пользователя
-        'fltHour': [flt_time.hour],  # Ввод пользователя
-        'fltMinute': [flt_time.minute]  # Ввод пользователя
-    })
-
-    combined_data = {**new_data.iloc[0].to_dict(), **transformed_data}
     st.write("Прогноз модели:")
 
-    with st.spinner('Загрузка моделей и прогноз...'): # Загрузка моделей и предсказания
+    with st.spinner('Загрузка моделей и прогноз...'): # Загрузка моделей и прогноз
         for model_name in model_names:
 
-            model_path = f'models/{model_name}'
+            model_path = f'BaggingRegressors2/BaggingRegressor_{model_name}'
             model = joblib.load(model_path)
 
-            # Предсказание для текущей модели
+            # Прогноз для текущей модели
             prediction = model.predict([list(combined_data.values())])
 
-            # Сохранение предсказания в словаре
+            # Сохранение прогноза в словаре
             predictions_dict[model_name] = prediction
 
-        # Вывод предсказаний для каждой модели
+        # Вывод прогноза для каждой модели
         for model_name, prediction in predictions_dict.items():
             st.write(f'{model_name.replace("BaggingRegressor_", "")}: {float(prediction)}')
         st.success('Предсказание успешно завершено!')
 
+with mod2:
+    st.write("Прогноз модели:")
 
+    with st.spinner('Загрузка моделей и прогноз...'):  # Загрузка моделей и прогноз
+        for model_name in model_names:
+
+            model_path = f'HistGradientBoostingRegressors/HistGradientBoostingRegressor_{model_name}'
+            model = joblib.load(model_path)
+
+            # Прогноз для текущей модели
+            prediction = model.predict([list(combined_data.values())])
+
+            # Сохранение прогноза в словаре
+            predictions_dict[model_name] = prediction
+
+        # Вывод прогноза для каждой модели
+        for model_name, prediction in predictions_dict.items():
+            st.write(f'{model_name.replace("HistGradientBoostingRegressor_", "")}: {float(prediction)}')
+        st.success('Предсказание успешно завершено!')
 
 
 
