@@ -8,7 +8,7 @@ warnings.filterwarnings("ignore")
 st.write("""
 # Прогноз количества мест на рейсе
 """)
-
+mod1, mod2, mod3 = st.tabs(["1 Модель", "2 Модель", "3 Модель"])
 # Список названий моделей
 model_names = [
     'BaggingRegressor_Y',
@@ -73,40 +73,40 @@ def transform_date(date):
     }
 
 
-input_date = st.date_input("Выберите дату:", datetime.datetime(2019, 12, 31))
-transformed_data = transform_date(input_date)
-st.write(transformed_data)
+with mod1:
+    input_date = st.date_input("Выберите дату:", datetime.datetime(2019, 12, 31))
+    transformed_data = transform_date(input_date)
 
-flt_time = st.time_input('Выберите время', value=datetime.time(13, 35))
+    flt_time = st.time_input('Выберите время', value=datetime.time(13, 35))
 
-new_data = pd.DataFrame({
-    'SA': [0.0],  # По умолчанию
-    'AU': [4.0],  # По умолчанию
-    'NS': [0.0],  # По умолчанию
-    'DTD': [st.number_input('Введите количество дней до вылета рейса:', min_value=0)],  # Ввод пользователя
-    'FLTNUM': [st.number_input('Введите № рейса:', min_value=0)],  # Ввод пользователя
-    'fltHour': [flt_time.hour],  # Ввод пользователя
-    'fltMinute': [flt_time.minute]  # Ввод пользователя
-})
+    new_data = pd.DataFrame({
+        'SA': [0.0],  # По умолчанию
+        'AU': [4.0],  # По умолчанию
+        'NS': [0.0],  # По умолчанию
+        'DTD': [st.number_input('Введите количество дней до вылета рейса:', min_value=0)],  # Ввод пользователя
+        'FLTNUM': [st.number_input('Введите № рейса:', min_value=0)],  # Ввод пользователя
+        'fltHour': [flt_time.hour],  # Ввод пользователя
+        'fltMinute': [flt_time.minute]  # Ввод пользователя
+    })
 
-combined_data = {**new_data.iloc[0].to_dict(), **transformed_data}
-st.write(combined_data)
+    combined_data = {**new_data.iloc[0].to_dict(), **transformed_data}
+    st.write("Прогноз модели:")
 
-with st.spinner('Загрузка моделей и предсказание...'): # Загрузка моделей и предсказания
-    for model_name in model_names:
+    with st.spinner('Загрузка моделей и прогноз...'): # Загрузка моделей и предсказания
+        for model_name in model_names:
 
-        model_path = f'models/{model_name}'
-        model = joblib.load(model_path)
+            model_path = f'models/{model_name}'
+            model = joblib.load(model_path)
 
-        # Предсказание для текущей модели
-        prediction = model.predict([list(combined_data.values())])
+            # Предсказание для текущей модели
+            prediction = model.predict([list(combined_data.values())])
 
-        # Сохранение предсказания в словаре
-        predictions_dict[model_name] = prediction
+            # Сохранение предсказания в словаре
+            predictions_dict[model_name] = prediction
 
-    # Вывод предсказаний для каждой модели
-    for model_name, prediction in predictions_dict.items():
-        st.write(f'{model_name.replace("BaggingRegressor_", "")}: {float(prediction)}')
-    st.success('Предсказание успешно завершено!')
+        # Вывод предсказаний для каждой модели
+        for model_name, prediction in predictions_dict.items():
+            st.write(f'{model_name.replace("BaggingRegressor_", "")}: {float(prediction)}')
+        st.success('Предсказание успешно завершено!')
 
 
